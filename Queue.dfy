@@ -36,9 +36,11 @@ class {:autocontracts} Queue {
   method size() returns (size:nat)
     ensures size == |Content|
     ensures Content == old(Content)
+  
+  method isEmpty() returns (isEmpty:bool)
+    ensures isEmpty == (|Content| == 0)
 
   // TODO
   // method contains()
-  // method isEmpty() returns (isEmpty:bool)
   // method mergeQueues() returns (mergedQueue:array<int>)
 }
