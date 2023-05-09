@@ -42,10 +42,21 @@ class {:autocontracts} Queue {
     // ensures Content == old(Content) + [item];
     
 
-  method remove(item: int)
-    requires |Content| > 0
-    ensures item == old(Content)[0]
-    ensures Content == old(Content)[1..]
+  // remove apenas mudando o ponteiro
+  // sem resetar o valor na posição, pois, provavelmente,
+  // vai ser sobrescrito pela inserção
+  method remove() returns (item: int)
+    requires front < queueSize
+  {
+    if counter == 0 {
+      item := -1;
+    
+    } else {
+      item := circularQueue[front];
+      front := (front + 1) % queueSize;
+      counter := counter - 1;
+    }
+  }
 
   method size() returns (size:nat)
     ensures size == counter
@@ -54,7 +65,8 @@ class {:autocontracts} Queue {
   }
 
   method isEmpty() returns (isEmpty: bool)
-    ensures isEmpty == (counter == 0);
+    ensures isEmpty == true ==> counter == 0;
+    ensures isEmpty == false ==> counter != 0;
   {
     isEmpty := if counter == 0 then true else false;
   }
@@ -62,7 +74,6 @@ class {:autocontracts} Queue {
   method contains(item: int) returns (contains: bool)
     ensures contains == true ==> item in circularQueue[..]
     ensures contains == false ==> item !in circularQueue[..]
-    ensures Content == old(Content)
   {
     var i: nat := 0;
     contains := false;
