@@ -154,17 +154,24 @@ class {:autocontracts} Queue {
   // sem resetar o valor na posição, pois, provavelmente,
   // vai ser sobrescrito pela inserção
   method remove() returns (item: int)
-    requires front < queueSize
-  {
+    requires front < circularQueue.Length
+    requires circularQueue.Length > 0
+    ensures rear <= |old(Content)|
+    ensures circularQueue.Length > 0
+    ensures item == old(Content)[old(front)]
+    ensures front == (old(front) + 1) % circularQueue.Length
+    ensures old(front) < rear ==> Content == old(Content)[old(front)..rear]
+    ensures old(front) > rear ==> Content == old(Content)[0 .. rear] + old(Content)[old(front)..|old(Content)|]
+  /*{
     if counter == 0 {
       item := -1;
 
     } else {
       item := circularQueue[front];
-      front := (front + 1) % queueSize;
+      front := (front + 1) % circularQueue.Length;
       counter := counter - 1;
     }
-  }
+  }*/
 
   method size() returns (size:nat)
     ensures size == counter
@@ -204,7 +211,7 @@ class {:autocontracts} Queue {
   {
     
     // queue1.merge(queue2)
-    var newQueueSize : int := otherQueue.queueSize + queueSize;
+    var newQueueSize : int := otherQueue.circularQueue.Length + circularQueue.Length;
     var newFront: int := front;
     var newRear: int := otherQueue.rear;
 
@@ -261,5 +268,11 @@ method Main ()
   circularQueue.auxInsertEndQueue(56);
   assert circularQueue.Content == [2,4,4,56];
   assert circularQueue.counter == 4;
+
+  var item := circularQueue.remove();
+  assert item == 2;
+  assert circularQueue.Content == [2, 4, 4, 56];
+  assert circularQueue.front == 1;
+
 
 }
