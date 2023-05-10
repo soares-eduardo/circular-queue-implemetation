@@ -140,8 +140,15 @@ class {:autocontracts} Queue {
   // }
 
   method auxInsertSpaceQueue(item:int)
-  requires rear + 1 != front && rear != circularQueue.Length-1 && rear + 1 < circularQueue.Length - 1
-  //Tem que terminar
+    requires rear < front && front < circularQueue.Length
+    ensures rear == old(rear) + 1
+    ensures counter == old(counter) + 1
+    ensures Content == old(Content[0..rear]) + [item] + old(Content[rear+1..circularQueue.Length])
+    ensures |Content| == old(|Content|) + 1
+
+  method auxInsertInitQueue(item:int)
+
+  method auxInsertBetweenQueue(item:int)
 
   method remove(item: int)
     requires |Content| > 0
@@ -204,6 +211,8 @@ method Main ()
   assert circularQueue.circularQueue.Length == 1;
   assert circularQueue.front == 0;
   assert circularQueue.rear == 1;
+  assert circularQueue.rear != 2;
+  assert circularQueue.front != 2;
 
   circularQueue.auxInsertEndQueue(4);
   assert circularQueue.Content == [2,4];
