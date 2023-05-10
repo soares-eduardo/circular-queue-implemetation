@@ -269,6 +269,12 @@ method Main ()
   assert circularQueue.Content == [2,4,4,56];
   assert circularQueue.counter == 4;
 
+  var contains56 := circularQueue.contains(56);
+  assert contains56 == true;
+
+  var contains4 := circularQueue.contains(4);
+  assert contains4 == true;
+
   var item := circularQueue.remove();
   assert item == 2;
   assert circularQueue.Content == [2, 4, 4, 56];
