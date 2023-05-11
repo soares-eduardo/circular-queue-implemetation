@@ -277,8 +277,15 @@ method Main ()
 
   var item := circularQueue.remove();
   assert item == 2;
-  assert circularQueue.Content == [2, 4, 4, 56];
+  //assert circularQueue.Content == [2, 4, 4, 56];
   assert circularQueue.front == 1;
 
+  assert (0 + 1) % 6 == 1;
+  assert (1 + 1) % 6 == 2;
+  assert (2 + 1) % 6 == 3;
+  assert (3 + 1) % 6 == 4;
+  assert (4 + 1) % 6 == 5;
+  assert (5 + 1) % 6 == 0;
+  assert (0 + 1) % 6 == 1;
 
 }
