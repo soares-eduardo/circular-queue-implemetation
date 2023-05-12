@@ -74,8 +74,27 @@ class {:autocontracts} CircularQueue {
                 queue[(tail + 1) % queue.Length] := item;
             }
         }
-
     }
+
+    method contains(item: int) returns (contains: bool)
+        ensures contains == true ==> item in Content
+        ensures contains == false ==> item !in Content
+        {
+            var i: nat := 0;
+            contains := false;
+
+            while (i < queue.Length)
+            decreases queue.Length - i
+            invariant 0 <= i <= queue.Length
+            invariant !contains ==> forall j :: 0 <= j < i ==> queue[j] != item
+            {
+            if (queue[i] == item) {
+                contains := true;
+                break;
+            }
+            i := i + 1;
+            }
+        }
 
     method remove() returns (item:int)
         requires |Content| > 0
@@ -89,8 +108,7 @@ class {:autocontracts} CircularQueue {
     function isEmpty():bool
     ensures isEmpty() == (|Content| == 0)
 
-    function contains(item: int):bool
-    ensures contains(item) == (item in Content)
+    
     
 
     method mergeQueues(otherQueue: CircularQueue) returns (mergedQueue: CircularQueue) 
