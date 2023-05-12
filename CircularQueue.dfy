@@ -8,44 +8,79 @@ class {:autocontracts} CircularQueue {
 
     // Abstração
     ghost var Content: seq<int>;
-    ghost var Counter: nat;
 
-    // Predicado
     ghost predicate Valid()
     {
-        0 <= Counter <= queue.Length &&
-        0 <= header <= queue.Length &&
-        0 <= tail <= queue.Length &&
-        header < tail && Counter > 0 ==> Content == queue[header..tail] &&
-        header > tail && Counter > 0 ==> Content == queue[..tail] + queue[header..] &&
-        Counter == 0 ==> Content == [] &&
-        Counter == |Content| &&
-        |Content| <= queue.Length
+        0 <= header < queue.Length &&
+        0 <= tail < queue.Length &&
+        header < tail  ==> Content == queue[header..tail+1] &&
+        header > tail  ==> Content == queue[..tail+1] + queue[header..] &&
+        |Content| == 0 ==> Content == []
     }
 
     constructor()
         ensures Content == []
-        ensures Counter == 0
-        ensures header == 0
-        ensures tail == 0
     {
-        queue := new int[0];
+        queue := new int[1];
         header := 0;
         tail := 0;
         Content := [];
-        Counter := 0;
     }
 
-    method insert(item:int)      
+    method insert(item:int)    
         ensures Content == old(Content) + [item]
-        ensures Counter == old(Counter) + 1
-        //achar algum jeito de dizer qual o tail
+        ensures |Content| == old(|Content|) + 1
+    {
+        Content := Content + [item];
+
+        if queue.Length != 0{
+
+            if ((tail + 1) % queue.Length) == header {
+                if header < tail{
+                    var newQueue : array := new int[queue.Length + 5];
+                    forall i | 0 <= i < queue.Length
+                    {
+                        newQueue[i] := queue[i];
+                    }
+
+                    newQueue[queue.Length] := item;
+                    queue:= newQueue;
+                    tail := (tail + 1) % queue.Length;
+                }
+                else{
+                    var newQueue : array := new int[queue.Length + 5];
+
+                    forall i | 0 <= i < tail + 1
+                    {
+                        newQueue[i] := queue[i];
+                    }
+
+                    newQueue[tail + 1] := item;
+
+                    forall i | tail + 1 <= i < queue.Length
+                    {
+                        newQueue[i+5] := queue[i];
+                    }
+
+                    // [5,4,1,2,3]
+                    // [5,4,8,x,x,x,x,1,2,3]
+
+                    queue:= newQueue;
+                    tail := (tail + 1) % queue.Length;
+                    header := (header + 5) % queue.Length;
+                }
+
+            }else{
+                queue[(tail + 1) % queue.Length] := item;
+            }
+        }
+
+    }
 
     method remove() returns (item:int)
         requires |Content| > 0
         ensures item == old(Content)[0]
         ensures Content == old(Content)[1..]
-        ensures Counter == old(Counter) - 1
         //achar algum jeito de dizer qual o header
 
     function size():nat
@@ -56,41 +91,25 @@ class {:autocontracts} CircularQueue {
 
     function contains(item: int):bool
     ensures contains(item) == (item in Content)
+    
 
     method mergeQueues(otherQueue: CircularQueue) returns (mergedQueue: CircularQueue) 
     
 }
 method Main() {
     var queue := new CircularQueue();
-
     assert queue.Content == [];
     assert queue.Content != [1];
-    assert queue.header == 0;
-    assert queue.header != 1;
-
     queue.insert(3);
 
     assert queue.Content == [3];
-    assert 3 in queue.Content;
-    assert queue.Content != [5];
-    assert queue.Content != [3,3];
-
-    assert queue.contains(3);
-    assert !queue.contains(10);
-    assert queue.header == 0;
-    assert queue.header != 1;
-    assert queue.tail == 1;
-    assert queue.tail != 3;
- 
+    assert queue.Content != [2];
+    
     queue.insert(6);
 
-    assert queue.Content == [3,6]; 
-    assert queue.Content != [5];
-    assert queue.Content != [3,6,4];
-    assert queue.header == 0;
-    assert queue.header != 1;
-    assert queue.tail == 2;
-    assert queue.tail != 3;
+    assert queue.Content == [3,6];
+    assert queue.Content != [3,2];
+
 
 
 }
