@@ -76,39 +76,49 @@ class {:autocontracts} CircularQueue {
         }
     }
 
-    method contains(item: int) returns (contains: bool)
-        ensures contains == true ==> item in Content
-        ensures contains == false ==> item !in Content
-        {
-            var i: nat := 0;
-            contains := false;
+    method isEmpty() returns (isEmpty: bool)
+      ensures isEmpty == true ==> |Content| == 0
+      ensures isEmpty == false ==> |Content| > 0
+    {
+        isEmpty := if tail == header then true else false;
+    }
 
-            while (i < queue.Length)
-            decreases queue.Length - i
-            invariant 0 <= i <= queue.Length
-            invariant !contains ==> forall j :: 0 <= j < i ==> queue[j] != item
-            {
-            if (queue[i] == item) {
-                contains := true;
-                break;
-            }
-            i := i + 1;
-            }
+    method size() returns (size: nat)
+    ensures size == |Content|
+    ensures Content == old(Content)
+    {
+        if (queue.Length == 0) {
+            size  := 0;
+        } else {
+            size := (tail - header + 1 + queue.Length) % queue.Length;
         }
+    }
+
+    // method contains(item: int) returns (contains: bool)
+    //     ensures contains == true ==> item in Content
+    //     ensures contains == false ==> item !in Content
+    //     {
+    //         var i: nat := 0;
+    //         contains := false;
+
+    //         while (i < queue.Length)
+    //         decreases queue.Length - i
+    //         invariant 0 <= i <= queue.Length
+    //         invariant !contains ==> forall j :: 0 <= j < i ==> queue[j] != item
+    //         {
+    //         if (queue[i] == item) {
+    //             contains := true;
+    //             break;
+    //         }
+    //         i := i + 1;
+    //         }
+    //     }
 
     method remove() returns (item:int)
         requires |Content| > 0
         ensures item == old(Content)[0]
         ensures Content == old(Content)[1..]
         //achar algum jeito de dizer qual o header
-
-    function size():nat
-    ensures size() == |Content|
-
-    function isEmpty():bool
-    ensures isEmpty() == (|Content| == 0)
-
-    
     
 
     method mergeQueues(otherQueue: CircularQueue) returns (mergedQueue: CircularQueue) 
@@ -127,6 +137,9 @@ method Main() {
 
     assert queue.Content == [3,6];
     assert queue.Content != [3,2];
+
+    var isEmptyFalse := queue.isEmpty();
+    assert isEmptyFalse == false;
 
 
 
