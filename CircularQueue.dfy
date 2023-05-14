@@ -17,14 +17,14 @@ class {:autocontracts} CircularQueue
     var queue: array<int>;
 
     // abstract
-    ghost var ghostQueue: seq<int>; // shadows the real queue
+    ghost var ghostQueue: seq<int>;
     
     ghost predicate Valid() 
     { 
-        queue.Length > 0 &&
-        count <= queue.Length &&
-        front < queue.Length &&
-        if front + count <= queue.Length
+        queue.Length > 0
+        && count <= queue.Length
+        && front < queue.Length
+        && if front + count <= queue.Length
         then ghostQueue == queue[front..front + count]
         else ghostQueue == queue[front..] + queue[..front + count - queue.Length]
     }
@@ -35,12 +35,14 @@ class {:autocontracts} CircularQueue
         ensures ghostQueue == []
     {
         queue := new int[size];
-        front, count := 0, 0;
+        front := 0;
+        count := 0;
         ghostQueue := [];
     }
 
     method enqueue(obj: int)
         ensures ghostQueue == old(ghostQueue) + [obj]
+        //ensures contains(obj)
     {
         // queue is full?
         if count == queue.Length 
@@ -68,7 +70,9 @@ class {:autocontracts} CircularQueue
             queue[rear - queue.Length] := obj;
         }
         count := count + 1;
+
         ghostQueue := ghostQueue + [obj];
+        
     }
 
     method dequeue() returns (obj: int)
@@ -79,10 +83,21 @@ class {:autocontracts} CircularQueue
         obj := queue[front];
         front := if front == queue.Length - 1 then 0 else front + 1;
         count := count - 1;
+
         ghostQueue := ghostQueue[1..];
     }
 
-    method has(obj: int) returns (contains: bool)
+    //ghost predicate contains(item: int)
+    //ensures contains(item) == true ==> item in ghostQueue
+    //ensures contains(item) == false ==> item !in ghostQueue
+    //{
+    //    item in ghostQueue
+    //}
+
+    method contains(obj: int) returns (contains: bool)
+        ensures contains == false ==> forall i :: 0 <= i < queue.Length ==> queue[i] != obj
+        ensures contains == true ==> exists j :: 0 <= j < queue.Length && queue[j] == obj
+        ensures forall i :: 0 <= i < |ghostQueue| ==> ghostQueue[i] in queue[..]
     {
         var i: nat := 0;
         contains := false;
@@ -90,7 +105,7 @@ class {:autocontracts} CircularQueue
         while (i < queue.Length)
             decreases queue.Length - i
             invariant 0 <= i <= queue.Length
-            invariant !contains ==> forall j :: 0 <= j < i ==> queue[j] != obj
+            invariant forall j :: 0 <= j < i ==> queue[j] != obj
         {
             if (queue[i] == obj) 
             {
@@ -100,7 +115,7 @@ class {:autocontracts} CircularQueue
             i := i + 1;
         }
     }
-    
+
     method getSize() returns (size: nat) 
         ensures size == |ghostQueue|
     {
@@ -108,14 +123,39 @@ class {:autocontracts} CircularQueue
     }
 
     method isEmpty() returns (empty: bool) 
+        ensures empty == (|ghostQueue| == 0)
     {
         return count == 0;
     }
 
-    method concat(otherQueue: CircularQueue) returns (mergedQueue: CircularQueue) 
+    // concatena duas filas e retorna uma nova sem alterar a atual
+    method concat(otherQueue: CircularQueue) returns (mergedQueues: CircularQueue)
     
 }
 
 method main() {
-    var circularQueue := new CircularQueue();
+    var circularQueue := new CircularQueue(2);
+
+    var empty := circularQueue.isEmpty(); assert empty == true;
+
+    circularQueue.enqueue(1);
+    circularQueue.enqueue(2);
+
+    var size := circularQueue.getSize(); assert size == 2;
+
+    circularQueue.enqueue(3);
+    circularQueue.enqueue(4);
+    circularQueue.enqueue(5);
+    size := circularQueue.getSize(); assert size == 5;
+
+    var contains := circularQueue.contains(3); assert contains == true;
+
+    var x := circularQueue.dequeue(); assert x == 1;
+    x := circularQueue.dequeue(); assert x == 2;
+    x := circularQueue.dequeue(); assert x == 3;
+    x := circularQueue.dequeue(); assert x == 4;
+    x := circularQueue.dequeue(); assert x == 5;
+    
+    circularQueue.enqueue(6);
+    x := circularQueue.dequeue(); assert x == 6;
 }
