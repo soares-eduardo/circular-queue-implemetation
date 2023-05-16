@@ -86,17 +86,20 @@ class {:autocontracts} CircularQueue
     }
 
     method has(obj: int) returns (contains: bool)
-        ensures contains == (obj in ghostQueue)
+        ensures contains <==> obj in ghostQueue
     {
         if front + count <= queue.Length
         {
-            if obj in queue[front..front + count]{
+            if obj in queue[front..front + count]
+            {
                 return true;
             }
 
         }
-        else{
-            if obj in queue[front..] + queue[..front + count - queue.Length]{
+        else
+        {
+            if obj in (queue[front..] + queue[..front + count - queue.Length])
+            {
                 return true;
             }
         }
@@ -111,38 +114,38 @@ class {:autocontracts} CircularQueue
     }
 
     method isEmpty() returns (empty: bool) 
-        ensures empty == (|ghostQueue| == 0)
+        ensures empty <==> |ghostQueue| == 0
     {
         return count == 0;
     }
 
-    // method concat(otherQueue: CircularQueue) returns (mergedQueues: CircularQueue)
-    //     requires otherQueue.Valid()
-    //     requires |otherQueue.ghostQueue| > 0
-    //     ensures mergedQueues.ghostQueue == ghostQueue + otherQueue.ghostQueue
-    // {
-    //     var otherQueueSize: nat := otherQueue.getSize();
-    //     mergedQueues := new CircularQueue(count + otherQueueSize);
+     method concat(otherQueue: CircularQueue) returns (mergedQueues: CircularQueue)
+         requires otherQueue.Valid()
+         requires |otherQueue.ghostQueue| > 0
+         ensures mergedQueues.ghostQueue == ghostQueue + otherQueue.ghostQueue
+     {
+         var otherQueueSize: nat := otherQueue.getSize();
+         mergedQueues := new CircularQueue(count + otherQueueSize);
 
-    //     var i: nat := 0;
-    //     while i < count
-    //         decreases count - i
-    //     { 
-    //         var a: nat := if front == queue.Length - 1 then 0 else front + 1;
-    //         //mergedQueues.enqueue(queue[a]);
-    //         i := i + 1;
-    //     }
+         var i: nat := 0;
+         while i < count
+             decreases count - i
+         { 
+             var a: nat := if front == queue.Length - 1 then 0 else front + 1;
+             //mergedQueues.enqueue(queue[a]);
+             i := i + 1;
+         }
 
-    //     var empty := otherQueue.isEmpty();
-    //     while !empty
-    //     {
-    //         var obj: int := otherQueue.dequeue();
-    //         mergedQueues.enqueue(obj);
-    //         empty := otherQueue.isEmpty();
-    //     }
-
-    //     mergedQueues.ghostQueue := ghostQueue + otherQueue.ghostQueue;
-    // }
+         var empty := otherQueue.isEmpty();
+         while !empty
+         {
+             var obj: int := otherQueue.dequeue();
+             mergedQueues.enqueue(obj);
+             empty := otherQueue.isEmpty();
+         }
+         
+         mergedQueues.ghostQueue := ghostQueue + otherQueue.ghostQueue;
+     }
 }
 
 method main() {
