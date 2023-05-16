@@ -125,8 +125,6 @@ class {:autocontracts} CircularQueue
         ensures ghostQueue == old(ghostQueue)
         ensures otherQueue.ghostQueue == old(otherQueue.ghostQueue)
 
-    
-     
 }
 
 method main() {
@@ -169,6 +167,4 @@ method main() {
 
     assert mergedQueues.ghostQueue == [1,2,3,11,12];
     assert mergedQueues.ghostQueue != [1,11,12];
-
-
 }
