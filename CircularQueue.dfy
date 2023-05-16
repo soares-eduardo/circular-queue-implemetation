@@ -42,6 +42,7 @@ class {:autocontracts} CircularQueue
     }
 
     method enqueue(obj: int)
+        ensures obj in ghostQueue
         ensures ghostQueue == old(ghostQueue) + [obj]
         ensures |ghostQueue| == old(|ghostQueue|) + 1
     {
@@ -119,33 +120,75 @@ class {:autocontracts} CircularQueue
         return count == 0;
     }
 
-     method concat(otherQueue: CircularQueue) returns (mergedQueues: CircularQueue)
-         requires otherQueue.Valid()
-         requires |otherQueue.ghostQueue| > 0
-         ensures mergedQueues.ghostQueue == ghostQueue + otherQueue.ghostQueue
-     {
-         var otherQueueSize: nat := otherQueue.getSize();
-         mergedQueues := new CircularQueue(count + otherQueueSize);
+    method concat(otherQueue: CircularQueue) returns (mergedQueues: CircularQueue)
+        requires otherQueue.Valid()
+        requires |otherQueue.ghostQueue| > 0
+        ensures mergedQueues.ghostQueue == ghostQueue + otherQueue.ghostQueue
+        ensures |mergedQueues.ghostQueue| == |ghostQueue| + |otherQueue.ghostQueue|
+        ensures ghostQueue == old(ghostQueue)
+    {
+        var otherQueueSize: nat := otherQueue.getSize();
+        mergedQueues := new CircularQueue(count + otherQueueSize);
 
-         var i: nat := 0;
-         while i < count
-             decreases count - i
-         { 
-             var a: nat := if front == queue.Length - 1 then 0 else front + 1;
-             //mergedQueues.enqueue(queue[a]);
-             i := i + 1;
-         }
+        var i: nat := 0;
+        while i < count
+            decreases count - i
+        { 
+            var a: nat := if front == queue.Length - 1 then 0 else front + 1;
+            //mergedQueues.enqueue(queue[a]);
+            i := i + 1;
+        }
 
-         var empty := otherQueue.isEmpty();
-         while !empty
-         {
-             var obj: int := otherQueue.dequeue();
-             mergedQueues.enqueue(obj);
-             empty := otherQueue.isEmpty();
-         }
-         
-         mergedQueues.ghostQueue := ghostQueue + otherQueue.ghostQueue;
-     }
+        i := 0;
+        while i < otherQueueSize
+            decreases otherQueueSize - i
+        {
+            //var obj: int := otherQueue.dequeue();
+            //mergedQueues.enqueue(obj);
+            i := i + 1;
+        }
+        
+        mergedQueues.ghostQueue := ghostQueue + otherQueue.ghostQueue;
+    }
+
+    /*method Merge(other: CircularQueue) returns (result: CircularQueue)
+        requires Valid()
+        requires other.Valid()
+    {
+        result := new CircularQueue(queue.Length);
+        
+        var tempQueue: seq<int> := new seq[queue.Length];
+        var tempFront := 0;
+        var tempCount := 0;
+        
+        var mergedGhostQueue: seq<int> := ghostQueue + other.ghostQueue;
+        
+        if count + other.count <= queue.Length {
+            // Merging without wrapping around
+            tempQueue[tempCount..tempCount + count] := queue[front..front + count];
+            tempCount := tempCount + count;
+            tempQueue[tempCount..tempCount + other.count] := other.queue[other.front..other.front + other.count];
+            tempCount := tempCount + other.count;
+        } else {
+            // Merging with wrapping around
+            var remainingSpace := queue.Length - count;
+            tempQueue[tempCount..tempCount + count] := queue[front..];
+            tempCount := tempCount + count;
+            tempQueue[tempCount..tempCount + remainingSpace] := queue[..remainingSpace];
+            tempCount := tempCount + remainingSpace;
+            
+            var remainingElements := other.count - remainingSpace;
+            tempQueue[tempCount..tempCount + remainingSpace] := other.queue[other.front..];
+            tempCount := tempCount + remainingSpace;
+            tempQueue[tempCount..tempCount + remainingElements] := other.queue[..remainingElements];
+            tempCount := tempCount + remainingElements;
+        }
+        
+        result.queue := tempQueue;
+        result.front := tempFront;
+        result.count := tempCount;
+        result.ghostQueue := mergedGhostQueue;
+    }*/
 }
 
 method main() {
@@ -164,6 +207,7 @@ method main() {
 
     empty := circularQueue.isEmpty(); assert empty == false;
     size := circularQueue.getSize(); assert size == 5;
+    
     var contains := circularQueue.has(3); 
     assert contains == true;
 
