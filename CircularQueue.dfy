@@ -168,6 +168,7 @@ method main() {
     var mergedQueues := circularQueue.merge(circularQueue2);
 
     assert mergedQueues.ghostQueue == [1,2,3,11,12];
+    assert mergedQueues.ghostQueue != [1,11,12];
 
 
 }
